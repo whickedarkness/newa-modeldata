@@ -28,6 +28,10 @@ jobs:
             script: src/ecmwf-eps.ts
             project: newa-ens-ecmwf
             site: https://newa-ens-ecmwf.pages.dev/
+          - model: aifseps
+            script: src/ecmwf-eps.ts --model aifs
+            project: newa-ens-aifs
+            site: https://newa-ens-aifs.pages.dev/
     name: ${{ matrix.model }}
     runs-on: ubuntu-latest
     timeout-minutes: 150
