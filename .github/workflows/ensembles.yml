@@ -1,4 +1,4 @@
-name: Ensemble maps
+name: Model maps
 
 on:
   schedule:
@@ -32,6 +32,10 @@ jobs:
             script: src/ecmwf-eps.ts --model aifs
             project: newa-ens-aifs
             site: https://newa-ens-aifs.pages.dev/
+          - model: icon
+            script: src/icon.ts
+            project: newa-icon
+            site: https://newa-icon.pages.dev/
     name: ${{ matrix.model }}
     runs-on: ubuntu-latest
     timeout-minutes: 150
