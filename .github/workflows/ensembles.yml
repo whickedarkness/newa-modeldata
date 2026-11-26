@@ -3,7 +3,7 @@ name: Ensemble maps
 on:
   schedule:
     # every hour: each job checks whether a new complete run is out and skips if it's already published
-    - cron: '20 * * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       force:
