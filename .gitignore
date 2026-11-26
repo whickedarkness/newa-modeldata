@@ -1,0 +1,4 @@
+node_modules/
+out/
+job/
+.job-key

@@ -1,0 +1,51 @@
+name: GEFS ensemble snowfall
+
+on:
+  schedule:
+    # every hour: the job checks whether a new complete GEFS run is out and skips if it's already published
+    - cron: '20 * * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Rebuild even if this run is already published'
+        type: boolean
+        default: false
+
+concurrency:
+  group: gefs
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Unpack the processing job
+        env:
+          JOB_KEY: ${{ secrets.JOB_KEY }}
+        run: |
+          mkdir -p job
+          printf '%s' "$JOB_KEY" > "$RUNNER_TEMP/k"
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass "file:$RUNNER_TEMP/k" -in job.enc | tar xz -C job
+          rm -f "$RUNNER_TEMP/k"
+          cd job && npm install --no-audit --no-fund --silent
+
+      - name: Build GEFS snowfall probability + percentiles
+        working-directory: job
+        run: npx tsx src/gefs-snow.ts --out ../out --site https://newa-modeldata.pages.dev/ ${{ inputs.force && '--force' || '' }}
+
+      - name: Publish to Cloudflare Pages
+        if: hashFiles('out/.skip') == ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@3 pages deploy out --project-name newa-modeldata --branch main --commit-dirty=true
